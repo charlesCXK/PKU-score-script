@@ -51,7 +51,7 @@ def sendemail(target_email, content):
     message['Subject'] = Header(subject, 'utf-8')
 
     try:
-        smtpObj = smtplib.SMTP_SSL(mail_host, 465)  # 启用SSL发信, 端口一般是465
+        smtpObj = smtplib.SMTP_SSL(mail_host)  # 启用SSL发信, 端口一般是465
         smtpObj.login(mail_user, mail_pass)  # 登录验证
         smtpObj.sendmail(sender, receivers, message.as_string())  # 发送
         print("邮件发送成功")
@@ -97,8 +97,6 @@ def message(args, lesson_num):
         lesson_num = course_num
 
         if len(args.email) > 0:
-            sender = '715811763@qq.com'
-            receivers = [args.email]  # 接收邮件，可设置为你的邮箱
             sendemail(args.email, '有新的成绩出分，本学期目前总绩点: {}'.format(td[-1].text))
 
     return lesson_num

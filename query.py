@@ -5,20 +5,38 @@ import re
 import random
 import requests
 import time
+from selenium import webdriver
 from bs4 import BeautifulSoup
+
+'''
+[description]
+get the content of content
+'''
+def connect(url):
+    driver = webdriver.Chrome(executable_path='./chromedriver')
+    driver.get(url)
+
+    return driver 
 
 def getPage(url):
     headers = {"Referer":url,
-    "User-Agent":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36"}
+    "User-Agent":"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.2 (KHTML, like Gecko) Chrome/22.0.1216.0 Safari/537.2"}
     r = requests.get(url, headers=headers, timeout=20)
+    print(r.text)
     r.encoding = "utf-8"
     return r.text
 
 def message(key):
     html = getPage(key)
+    
+    # driver = connect(key)
+    # iframe = driver.find_element_by_name('main')
+    # driver.switch_to.frame(iframe)
+    # table = driver.find_elements_by_tag_name('table')
+
     soup = BeautifulSoup(html, 'html.parser')
 
-    pat = re.compile(r"(17-18[0-9]{9})([0-9]*|[A-Z])(.*?)([0-9]{1})([0-9]*\.[0-9]*)")
+    pat = re.compile(r"(18-19[0-9]{9})([0-9]*|[A-Z])(.*?)([0-9]{1})([0-9]*\.[0-9]*)")
     gpa = re.compile(r"([0-9]*\.[0-9]*)")
     course_num = 0
     # 找到所有行
@@ -27,7 +45,7 @@ def message(key):
 
     for rr in tr:
         grade = str(rr.text)
-        if grade.startswith("17"):          # 本学期的课程
+        if grade.startswith("18"):          # 本学期的课程
             res = pat.findall(grade)
             if res:
                 res = res[0]
@@ -48,4 +66,4 @@ if __name__ == "__main__":
         query += 1
         time.sleep(random.uniform(0.88, 1.58))
         print("第 {} 次查询".format(query))
-        message(key = 'http://dean.pku.edu.cn/student/new_grade.php?')
+        message(key = 'http://dean.pku.edu.cn/student/new_grade.php?PHPSESSID=')

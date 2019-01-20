@@ -5,8 +5,12 @@ import re
 import random
 import requests
 import time
-from selenium import webdriver
+import argparse
+import smtplib
+
 from bs4 import BeautifulSoup
+from email.mime.text import MIMEText
+from email.header import Header
 
 '''
 [description]
@@ -25,8 +29,38 @@ def getPage(url):
     r.encoding = "utf-8"
     return r.text
 
-def message(key):
-    html = getPage(key)
+'''
+[description]
+邮件提醒功能
+'''
+def sendemail(target_email, content):
+    # 第三方 SMTP 服务
+    mail_host="smtp.163.com"  #设置服务器
+    mail_user="tixishixi@163.com"    #用户名
+    mail_pass="pkuscore2019"   #口令 
+
+    sender = 'tixishixi@163.com'
+    receivers = [target_email]  # 接收邮件，可设置为你的邮箱
+
+    # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
+    message = MIMEText(content, 'plain', 'utf-8')
+    message['From'] = "{}".format(sender)   # 发送者
+    message['To'] = ",".join(receivers)       # 接收者
+     
+    subject = 'PKU-score-script'
+    message['Subject'] = Header(subject, 'utf-8')
+
+    try:
+        smtpObj = smtplib.SMTP_SSL(mail_host, 465)  # 启用SSL发信, 端口一般是465
+        smtpObj.login(mail_user, mail_pass)  # 登录验证
+        smtpObj.sendmail(sender, receivers, message.as_string())  # 发送
+        print("邮件发送成功")
+    except smtplib.SMTPException:
+        print("Error: 无法发送邮件")
+
+def message(args, lesson_num):
+    url = args.url
+    html = getPage(url)
     
     # driver = connect(key)
     # iframe = driver.find_element_by_name('main')
@@ -59,10 +93,26 @@ def message(key):
     print("***************************************  当前学期GPA：{}  ***************************************".format(td[-1].text))
     print('\n' * 2)
 
+    if course_num != lesson_num:
+        lesson_num = course_num
+
+        if len(args.email) > 0:
+            sender = '715811763@qq.com'
+            receivers = [args.email]  # 接收邮件，可设置为你的邮箱
+            sendemail(args.email, '有新的成绩出分，本学期目前总绩点: {}'.format(td[-1].text))
+
+    return lesson_num
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--url', '-u', default='', type=str, help = 'webpage url')
+    parser.add_argument('--email', '-e', default='', type=str, help = 'your email address')
+    args = parser.parse_args()
+
     query = 0
+    lesson_num = 0      # 上一次出分的课程数
     while(1):
         query += 1
         time.sleep(random.uniform(0.88, 1.58))
         print("第 {} 次查询".format(query))
-        message(key = 'http://dean.pku.edu.cn/student/new_grade.php?PHPSESSID=')
+        lesson_num = message(args, lesson_num)
